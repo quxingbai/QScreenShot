@@ -1,0 +1,337 @@
+﻿<UserControl x:Class="QScreenShot.ScreenShotControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:QScreenShot"
+             mc:Ignorable="d" Name="THIS" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.Resources>
+            <Style TargetType="ContentControl" x:Key="CONTENTCONTROL_NullToHide">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ContentControl">
+                            <Border>
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <DataTrigger Binding="{Binding DataContext}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
+        <Image Stretch="Fill" Source="{Binding ElementName=THIS,Path=ImageSource}" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+        <Border  Background="Black" Opacity="0.3" Name="BD_ImageMask"   Cursor="Cross"/>
+        <Canvas Name="CANVAS_SelectRecMask" Cursor="Hand" IsHitTestVisible="True" Background="Transparent">
+            <Border Opacity="1"  Background="Black"  Name="GRID_SelectRecMask"  Width="0" Height="0" Canvas.Left="0" Canvas.Top="0" BorderBrush="Transparent" BorderThickness="{Binding ElementName=BD_SelectRangeBorder,Path=BorderThickness}" CornerRadius="{Binding ElementName=BD_SelectRangeBorder,Path=CornerRadius}">
+            </Border>
+        </Canvas>
+        <Image Stretch="Fill" Source="{Binding ElementName=THIS,Path=ImageSource}" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <Image.OpacityMask>
+                <VisualBrush Stretch="None" AlignmentX="Left" AlignmentY="Top" Visual="{Binding ElementName=CANVAS_SelectRecMask}" ViewboxUnits="Absolute">
+                </VisualBrush>
+            </Image.OpacityMask>
+        </Image>
+        <Border Background="Black" Opacity="0.05"/>
+        <Canvas Name="CANVAS_ElementCvs">
+            <Border Name="BD_SelectRangeBorder" BorderThickness="2" BorderBrush="Orange" CornerRadius="1.5" Width="{Binding ElementName=GRID_SelectRecMask,Path=Width}" Height="{Binding ElementName=GRID_SelectRecMask,Path=Height}" Canvas.Top="{Binding ElementName=GRID_SelectRecMask,Path=(Canvas.Top)}" Canvas.Left="{Binding ElementName=GRID_SelectRecMask,Path=(Canvas.Left)}" >
+                <Grid>
+                </Grid>
+            </Border>
+            <Border Name="BD_SelectRangeBorder_Tooltips" Canvas.Left="0" Canvas.Top="0" Visibility="Collapsed">
+                <Grid>
+                    <Border Background="Transparent" VerticalAlignment="Center" Margin="0,0,0,5">
+                        <StackPanel Orientation="Horizontal">
+                            <ContentControl>
+                                <Border  Margin="0,0,10,0" Background="#d0000000" CornerRadius="2" Padding="5">
+                                    <WrapPanel>
+                                        <Border Background="Transparent" Margin="0,0,8,0" MaxWidth="14" MaxHeight="14">
+                                            <Image Source="{Binding Window.Icon.Value}"/>
+                                        </Border>
+                                        <TextBlock MaxWidth="230" DataContext="{Binding Window}" Foreground="White" >
+                                            <Run Text="{Binding Title.Value,Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </WrapPanel>
+                                </Border>
+                                <ContentControl.Template>
+                                    <ControlTemplate TargetType="ContentControl">
+                                        <ContentPresenter/>
+                                        <ControlTemplate.Triggers>
+                                            <!--<DataTrigger Binding="{Binding Title}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>-->
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ContentControl.Template>
+                            </ContentControl>
+                            <Border Margin="0,0,0,0" Background="#d0000000" CornerRadius="2" Padding="5">
+                                <TextBlock VerticalAlignment="Center" DataContext="{Binding SelectRange}" Foreground="White">
+                                    <TextBlock.Inlines>
+                                        <Run Text="{Binding Width}"/>
+                                        <Run Text="x"/>
+                                        <Run Text="{Binding Height}"/>
+                                    </TextBlock.Inlines>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+            <Border Name="BD_PointImageHost" Canvas.Left="0" Canvas.Top="0" Visibility="Collapsed">
+                <Grid Margin="10,10">
+                    <Border Name="BD_PointImageHost_ImageMask" Background="White"  BorderThickness="2" BorderBrush="Transparent" CornerRadius="4"/>
+                    <Border Background="{Binding ElementName=BD_SelectRangeBorder,Path=BorderBrush}"   Width="115" Height="115" BorderThickness="1" BorderBrush="Transparent"   CornerRadius="{Binding ElementName=BD_PointImageHost_ImageMask,Path=CornerRadius}">
+                        <Grid>
+                            <Border Background="Orange" Opacity="0.5">
+                                <Border.Effect>
+                                    <BlurEffect Radius="10"/>
+                                </Border.Effect>
+                            </Border>
+                            <Image Name="IMAGE_PointImage" Source="{Binding ElementName=THIS,Path=PointImageSource}">
+                                <Image.OpacityMask>
+                                    <VisualBrush Visual="{Binding ElementName=BD_PointImageHost_ImageMask}" />
+                                </Image.OpacityMask>
+                            </Image>
+                            <Border  BorderBrush="{Binding ElementName=BD_SelectRangeBorder,Path=BorderBrush}" BorderThickness="0.5" HorizontalAlignment="Center"/>
+                            <Border BorderBrush="{Binding ElementName=BD_SelectRangeBorder,Path=BorderBrush}" BorderThickness="0.5" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+
+            <Border Visibility="Collapsed" Name="BD_DrawingShowSelectInfo" Canvas.Left="0" Canvas.Top="0" Background="#a0000000" Padding="15,5,15,5" CornerRadius="2">
+                <WrapPanel>
+                    <TextBlock Foreground="White" ToolTip="选中的区域相对于 组件 的大小">
+                        <Run Text="组件选中：" Foreground="LightGray"/>
+                        <Run Text="{Binding SelectControlRec.Width,Mode=OneWay}"/>
+                        <Run Text="x"/>
+                        <Run Text="{Binding SelectControlRec.Height,Mode=OneWay}"/>
+                    </TextBlock>
+                    <TextBlock Margin="15,0,0,0" Foreground="White" ToolTip="选中的区域相对于 图片 的大小">
+                        <Run Text="图片选中：" Foreground="LightGray"/>
+                        <Run Text="{Binding SelectImageRec.Width,Mode=OneWay}"/>
+                        <Run Text="x"/>
+                        <Run Text="{Binding SelectImageRec.Height,Mode=OneWay}"/>
+                    </TextBlock>
+                </WrapPanel>
+            </Border>
+        </Canvas>
+        <ListBox Name="LIST_DrawingItems" Background="{x:Null}" BorderThickness="0">
+            <ListBox.Template>
+                <ControlTemplate TargetType="ListBox">
+                    <Border>
+                        <ItemsPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </ListBox.Template>
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <!--<EventSetter Event="Loaded" Handler="ListBoxItem_Loaded"/>-->
+                    <Setter Property="Canvas.Left" Value="{Binding Location.Left}"/>
+                    <Setter Property="Canvas.Top" Value="{Binding Location.Top}"/>
+                    <Setter Property="Width" Value="{Binding Location.Width}"/>
+                    <Setter Property="Height" Value="{Binding Location.Height}"/>
+                    <EventSetter Event="PreviewMouseDown" Handler="ListBoxItem_DrawingItem_PreviewMouseDown"/>
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border Background="{x:Null}">
+                                    <Grid>
+                                        <Canvas>
+                                            <ContentPresenter Content="{Binding UIElement}" Visibility="Visible"/>
+                                        </Canvas>
+                                    </Grid>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+        <Border Name="BD_DrawingItemEditHost" DataContext="{Binding ElementName=THIS,Path=EditDrawingItem}">
+            <ContentControl >
+                <ContentControl.Template>
+                    <ControlTemplate TargetType="ContentControl">
+                        <Border>
+                            <Grid>
+                                <Canvas>
+                                    <Canvas Canvas.Left="{Binding Location.Left}" Canvas.Top="{Binding Location.Top}" Width="{Binding Location.Width}" Height="{Binding Location.Height}">
+                                        <Canvas.Resources>
+                                            <Style TargetType="local:DrawingItemResizeButton">
+                                                <Setter Property="Background" Value="MediumPurple"/>
+                                                <Setter Property="BorderBrush" Value="White"/>
+                                                <Setter Property="BorderThickness" Value="3"/>
+                                                <Setter Property="CornerRadius" Value="10"/>
+                                                <Setter Property="Cursor" Value="Pen"/>
+                                                <Setter Property="Margin" Value="-10"/>
+                                                <Setter Property="Padding" Value="0"/>
+                                            </Style>
+                                        </Canvas.Resources>
+                                        <local:DrawingItemResizeButton x:Name="RESIZE_LT" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.RX1}" Canvas.Top="{Binding Location.RY1}" Direction="LeftTop"/>
+                                        <local:DrawingItemResizeButton x:Name="RESIZE_CT" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.CenterX}" Canvas.Top="{Binding Location.RY1}" Direction="TopCenter"/>
+                                        <local:DrawingItemResizeButton x:Name="RESIZE_RT" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.RX2}" Canvas.Top="{Binding Location.RY1}" Direction="RightTop"/>
+
+                                        <local:DrawingItemResizeButton x:Name="RESIZE_CL" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.RX1}" Canvas.Top="{Binding Location.CenterY}" Direction="LeftCenter"/>
+                                        <local:DrawingItemResizeButton x:Name="RESIZE_C" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.CenterX}" Canvas.Top="{Binding Location.CenterY}" Direction="Center"/>
+                                        <local:DrawingItemResizeButton x:Name="RESIZE_CR" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.RX2}" Canvas.Top="{Binding Location.CenterY}" Direction="RightCenter"/>
+
+                                        <local:DrawingItemResizeButton  x:Name="RESIZE_LB" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.RX1}" Canvas.Top="{Binding Location.RY2}" Direction="LeftBottom"/>
+                                        <local:DrawingItemResizeButton  x:Name="RESIZE_BC" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.CenterX}" Canvas.Top="{Binding Location.RY2}" Direction="BottomCenter"/>
+                                        <local:DrawingItemResizeButton  x:Name="RESIZE_RB" Target="{Binding .}" Visibility="Collapsed" Canvas.Left="{Binding Location.RX2}" Canvas.Top="{Binding Location.RY2}" Direction="RightBottom"/>
+                                    </Canvas>
+                                </Canvas>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding CanResizeMode}" Value="StartEnd">
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_RB"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_LT"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CanResizeMode}" Value="Center">
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_C" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CanResizeMode}" Value="RecCorner">
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_LT"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_CT"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_RT"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_CL"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_C" />
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_CR"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_LB"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_BC"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_RB"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding CanResizeMode}" Value="All">
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_LT"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_CT"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_RT"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_CL"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_C" />
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_CR"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_LB"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_BC"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_RB"/>
+                            </DataTrigger>
+
+
+                            <DataTrigger Binding="{Binding .}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ContentControl.Template>
+            </ContentControl>
+        </Border>
+        <Canvas>
+            <Border Name="BD_DrawingItemsHost" Padding="6" Background="White" CornerRadius="2" MinWidth="250" Visibility="Collapsed" Margin="0">
+                <Grid Width="auto" Background="White">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <!--<RowDefinition Height="auto"/>-->
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ListBox Margin="0,0,10,0" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Hidden" Name="LIST_DrawingPens" SelectionChanged="LIST_DrawingPens_SelectionChanged"  Background="Transparent" BorderThickness="0">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Foreground" Value="DimGray"/>
+                                        <Setter Property="MinWidth" Value="60"/>
+                                        <EventSetter Event="PreviewMouseDown" Handler="LIST_DrawingPensItemMouseDown"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border CornerRadius="5" Background="{TemplateBinding Background}"  Padding="9">
+                                                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            <ContentPresenter Visibility="Collapsed"/>
+                                                            <TextBlock Text="{Binding PenName}" Foreground="{TemplateBinding Foreground}" />
+                                                        </Grid>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#26FF4500"/>
+                                                            <Setter Property="Foreground" Value="OrangeRed"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                            <Border Grid.Column="1">
+                                <Button Click="BT_Print_Click" Cursor="Hand" Content="确认"   Name="BT_Print" Padding="3" Width="70" >
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Foreground" Value="DimGray"/>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="#FFEFEFEF" Name="BD" CornerRadius="3">
+                                                <Grid>
+                                                    <ContentPresenter Name="CONTENT" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" TargetName="BD" Value="OrangeRed"/>
+                                                    <Setter Property="Foreground" Value="White" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Border>
+                        </Grid>
+
+                    </Grid>
+                </Grid>
+            </Border>
+            <Border Name="BD_PenDrawingPropertyHost" Visibility="Collapsed"  DataContext="{Binding ElementName=THIS,Path=InHandDrawingPen}">
+                <Border Background="White" CornerRadius="2" Padding="8">
+                    <ListBox Background="Transparent" BorderThickness="0" ItemsSource="{Binding CanDrawingItemPropertys}">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Margin" Value="0,5,0,10"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border MinWidth="200">
+                                                <Grid>
+                                                    <local:DrawingItemPropertyStateSetter PropertyData="{Binding .}" ToolTip="{Binding Value}"/>
+                                                </Grid>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </Border>
+            </Border>
+
+        </Canvas>
+    </Grid>
+</UserControl>
