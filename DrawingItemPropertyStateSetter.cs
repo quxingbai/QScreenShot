@@ -69,6 +69,8 @@ namespace QScreenShot
                 sSetBinding(FontSizeBigSlider, Slider.ValueProperty);
                 sSetBinding(FontSizeSlider, Slider.ValueProperty);
                 sSetBinding(ColorListBox, ListBox.SelectedItemProperty);
+                sSetBinding(GetTemplateChild("Value_0To100_1") as Slider, Slider.ValueProperty);
+                sSetBinding(GetTemplateChild("Value_0To100_2") as Slider, Slider.ValueProperty);
             }
             void sSetBinding(FrameworkElement ele,DependencyProperty valProp)
             {

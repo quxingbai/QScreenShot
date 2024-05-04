@@ -248,7 +248,7 @@ namespace QScreenShot
             public void Dispose()
             {
                 this.BitmapSource.Dispose();
-                Stream.Dispose();
+                Stream?.Dispose();
                 Image = null;
                 Stream = null;
             }
@@ -315,7 +315,7 @@ namespace QScreenShot
         /// <param name="Print">点击确认按钮</param>
         /// <param name="InitControl">初始化组件 可为Null</param>
         /// <returns></returns>
-        public static Window Show(Action<ScreenImageMemory> Print, Action<ScreenShotControl> InitControl = null)
+        public static Window Show(Action<ScreenImageMemory> Print, Action<ScreenShotControl> InitControl = null, Func<ScreenShotControl, bool> Cancel = null)
         {
             ScreenShotControl c = new ScreenShotControl();
             c.Shot();
@@ -325,21 +325,27 @@ namespace QScreenShot
                 Content = c,
                 WindowState = WindowState.Normal,
                 WindowStyle = WindowStyle.None,
-                Topmost = true,
+                Topmost = false,
                 AllowsTransparency = true,
                 Background = null,
-                Width=SystemParameters.PrimaryScreenWidth, Height=SystemParameters.PrimaryScreenHeight,
-                Left=0,Top=0,
+                Width = SystemParameters.PrimaryScreenWidth,
+                Height = SystemParameters.PrimaryScreenHeight,
+                Left = 0,
+                Top = 0,
                 Title = "截图"
             };
-            ControlUtils.ClickEventSetter<Window> wc = new ControlUtils.ClickEventSetter<Window>(w,true);
+            ControlUtils.ClickEventSetter<Window> wc = new ControlUtils.ClickEventSetter<Window>(w, true);
             wc.Click += (ss, ee) =>
             {
-                if(ee.ChangedButton== MouseButton.Right)
+                if (ee.ChangedButton == MouseButton.Right)
                 {
                     if (c.Step == ScreenShotControl.ScreenImageShotStep.SelectRange)
                     {
-                        w.Close();
+                        if (Cancel?.Invoke(c) ?? true)
+                        {
+                            w.Close();
+                            c.Dispose();
+                        }
                     }
                 }
             };
@@ -349,15 +355,24 @@ namespace QScreenShot
                 {
                     c.SelectedRangeToMax();
                 }
-                if(ee.Key == Key.Delete && c.EditDrawingItem != null)
+                else if (ee.Key == Key.Delete && c.EditDrawingItem != null)
                 {
                     c.RemoveSelectEditDrawingItem();
+                }
+                else if (ee.Key == Key.Escape)
+                {
+                    if (Cancel?.Invoke(c) ?? true)
+                    {
+                        w.Close();
+                        c.Dispose();
+                    }
                 }
             };
             c.Print += (ss, ee) =>
             {
                 Print.Invoke(ee);
                 w.Close();
+                c.Dispose();
             };
             w.Show();
             return w;

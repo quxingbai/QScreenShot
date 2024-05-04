@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:QScreenShot"
-             mc:Ignorable="d" Name="THIS" 
+             mc:Ignorable="d" Name="THIS"  
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid.Resources>
@@ -53,16 +53,14 @@
                                         <Border Background="Transparent" Margin="0,0,8,0" MaxWidth="14" MaxHeight="14">
                                             <Image Source="{Binding Window.Icon.Value}"/>
                                         </Border>
-                                        <TextBlock MaxWidth="230" DataContext="{Binding Window}" Foreground="White" >
-                                            <Run Text="{Binding Title.Value,Mode=OneWay}"/>
-                                        </TextBlock>
+                                        <TextBlock MaxWidth="230"  Foreground="White"  Text="{Binding Window.Title.Value}"/>
                                     </WrapPanel>
                                 </Border>
                                 <ContentControl.Template>
                                     <ControlTemplate TargetType="ContentControl">
                                         <ContentPresenter/>
                                         <ControlTemplate.Triggers>
-                                            <!--<DataTrigger Binding="{Binding Title}" Value="">
+                                            <!--<DataTrigger Binding="{Binding Window}" Value="{x:Null}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                             </DataTrigger>-->
                                         </ControlTemplate.Triggers>
@@ -198,6 +196,7 @@
                         <ControlTemplate.Triggers>
                             <DataTrigger Binding="{Binding CanResizeMode}" Value="StartEnd">
                                 <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_RB"/>
+                                <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_C" />
                                 <Setter Property="Visibility" Value="Visible" TargetName="RESIZE_LT"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding CanResizeMode}" Value="Center">
@@ -331,7 +330,6 @@
                     </ListBox>
                 </Border>
             </Border>
-
         </Canvas>
     </Grid>
 </UserControl>

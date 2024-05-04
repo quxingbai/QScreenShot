@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QScreenShot.DrawingItemControsl;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -164,14 +165,14 @@ namespace QScreenShot
             }
             public enum DrawingItemProperty
             {
-                None, Color, Size,SizeBig
+                None, Color, Size, SizeBig, Value0To100_1,Value0To100_2
             }
             public event Action<ImageDrawingPenBase, DrawingItemPropertyData> DrawingProertyChanged;
             public class DrawingItemPropertyData : INotifyPropertyChanged
             {
                 public DrawingItemProperty PropertyType { get; set; }
                 private object _Value;
-                public object Value { get=>_Value; set { _Value = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Value")); } }
+                public object Value { get => _Value; set { _Value = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Value")); } }
 
                 public event PropertyChangedEventHandler? PropertyChanged;
                 public static DrawingItemPropertyData[] Creates(params DrawingItemProperty[] types)
@@ -192,6 +193,14 @@ namespace QScreenShot
                     {
                          new DrawingItemPropertyData(){PropertyType= DrawingItemProperty.Color,Value=Color??Brushes.Black},
                          new DrawingItemPropertyData(){PropertyType= DrawingItemProperty.SizeBig,Value= Size??6}
+                    };
+                }
+                public static DrawingItemPropertyData[] CreateKline(Brush Color = null, double? Open = null, double? Now = null)
+                {
+                    return new DrawingItemPropertyData[]
+                    {
+                         new DrawingItemPropertyData(){PropertyType= DrawingItemProperty.Value0To100_1,Value= Open??20},
+                         new DrawingItemPropertyData(){PropertyType= DrawingItemProperty.Value0To100_2,Value= Now??100}
                     };
                 }
                 //public void Update()
@@ -474,7 +483,7 @@ namespace QScreenShot
             //return new Rect(tx, ty, point.Width * WidthEnlarge, point.Height * HeightEnlarge);
             var res = new Rect((int)tx, (int)ty, (int)(point.Width * WidthEnlarge), (int)(point.Height * HeightEnlarge));
             var maxOffset = 5;
-            return (res.X == 0 && res.Y == 0 && res.Width >= RenderSize.Width-maxOffset && res.Height >= RenderSize.Height-maxOffset) ? imgRec : res;
+            return (res.X == 0 && res.Y == 0 && res.Width >= RenderSize.Width - maxOffset && res.Height >= RenderSize.Height - maxOffset) ? imgRec : res;
         }
         protected Point ImagePointToControlPoint(Point point)
         {
@@ -511,10 +520,6 @@ namespace QScreenShot
                             break;
                         case ScreenImageShotStep.SelectRange:
                             UnSelectRec();
-                            if (this.PointImageSource != null)
-                            {
-                                ShowPointImageHost();
-                            }
                             PreviewMouseMove += ScreenShotControl_WindowRecSelectMouseMove;
                             PreviewMouseDown += ScreenShotControl_WindowRecSelectMouseDown;
                             break;
@@ -666,6 +671,10 @@ namespace QScreenShot
         //如果是开始的范围选择 就会调用MouseMove以下事件
         private void ScreenShotControl_WindowRecSelectMouseMove(object sender, MouseEventArgs e)
         {
+            if (this.PointImageSource != null)
+            {
+                ShowPointImageHost();
+            }
             var nowPos = e.GetPosition(this);
             var nowPosInt = new gdi.Point((int)nowPos.X, (int)nowPos.Y);
             //如果是鼠标按下后移动选择尺寸
@@ -694,7 +703,7 @@ namespace QScreenShot
                 PointImageSource = this.ImageSourceMemory.GetPointImageBMI((int)pp.X, (int)pp.Y, 45);
                 var prw = BD_PointImageHost.RenderSize.Width;
                 var prh = BD_PointImageHost.RenderSize.Height;
-                var marginBorder = 300;
+                var marginBorder = 150;
                 Canvas.SetLeft(BD_PointImageHost, nowPos.X <= 0 ? marginBorder : nowPos.X + prw >= RenderSize.Width ? RenderSize.Width - marginBorder : nowPos.X);
                 Canvas.SetTop(BD_PointImageHost, nowPos.Y <= 0 ? marginBorder : nowPos.Y + prh >= RenderSize.Height ? RenderSize.Height - marginBorder : nowPos.Y);
             }
@@ -781,7 +790,7 @@ namespace QScreenShot
         //选中全图
         public void SelectedRangeToMax()
         {
-            SelectRec(new Rect(0,0,ActualWidth,ActualHeight));
+            SelectRec(new Rect(0, 0, ActualWidth, ActualHeight));
             //SelectedRec(new Rect(0,0,ActualWidth,ActualHeight));
         }
         //返回上一步操作
@@ -794,19 +803,16 @@ namespace QScreenShot
                 case ScreenImageShotStep.SelectRange:
                     break;
                 case ScreenImageShotStep.Drawing:
-                    //if (LIST_DrawingItems.Items.Count != 0)
-                    //{
-                    //    LIST_DrawingItems.Items.Clear();
-                    //    return;
-                    //}
-                    if(EditDrawingItem != null)
+
+                    if (EditDrawingItem != null|| InHandDrawingPen!=null)
                     {
                         EditDrawingItem = null;
+                        InHandDrawingPen = null;
                         return;
                     }
-                    if (InHandDrawingPen != null)
+                    if (LIST_DrawingItems.Items.Count != 0)
                     {
-                        InHandDrawingPen = null;
+                        LIST_DrawingItems.Items.Clear();
                         return;
                     }
                     Step = ScreenImageShotStep.SelectRange;
@@ -854,7 +860,7 @@ namespace QScreenShot
         /// </summary>
         public bool RemoveSelectEditDrawingItem()
         {
-            if(EditDrawingItem != null)
+            if (EditDrawingItem != null)
             {
                 LIST_DrawingItems.Items.Remove(EditDrawingItem);
                 EditDrawingItem = null;
@@ -918,7 +924,6 @@ namespace QScreenShot
 
                 Storyboard.SetTargetProperty(LeftAnm, new("(Canvas.Left)"));
                 Storyboard.SetTargetProperty(TopAnm, new("(Canvas.Top)"));
-
                 Storyboard sb = new Storyboard();
                 sb.Completed += (ss, ee) =>
                 {
@@ -956,6 +961,35 @@ namespace QScreenShot
         #region 绘制项
         private void LoadDrawingPens()
         {
+            CreatePen<KLine>("K线", null, () => new KLine() { Max=100,Min=0,Open=0,Now=0}, (sender, element, rec) =>
+            {
+                var start = rec.GetStartPoint();
+                var end = rec.GetEndPoint();
+                element.Height = rec.Height;
+                element.Width = rec.Width;
+                element.UpdateUI();
+            }).SetDrawingPropertys(ImageDrawingPenBase.DrawingItemPropertyData.CreateKline(), (sender, data) =>
+            {
+                sender.GetCanResizeMode = sender.CanResizeMode == DrawingUIItemHost.ResizeMode.None ? () => DrawingUIItemHost.ResizeMode.StartEnd : sender.GetCanResizeMode;
+                switch (data.PropertyType)
+                {
+                    case ImageDrawingPenBase.DrawingItemProperty.Value0To100_1:
+                        {
+                            var l = (sender.UIElement as KLine);
+                            l.Open = (double.Parse(data.Value.ToString()));
+                        }
+                        break;
+                    case ImageDrawingPenBase.DrawingItemProperty.Value0To100_2:
+                        {
+                            var l = (sender.UIElement as KLine);
+                            l.Now = (double.Parse(data.Value.ToString()));
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            });
+
             CreatePen<Line>("线段", null, () => new Line(), (sender, element, rec) =>
             {
                 var start = rec.GetStartPoint();
@@ -1065,7 +1099,7 @@ namespace QScreenShot
                 }
             });
 
-            CreatePen<TextBox>("文本", null, () => new TextBox() { Background = Brushes.Transparent, BorderBrush = null,AcceptsReturn=true, }, (sender, element, rec) =>
+            CreatePen<TextBox>("文本", null, () => new TextBox() { Background = Brushes.Transparent, BorderBrush = null, AcceptsReturn = true, }, (sender, element, rec) =>
             {
                 var start = rec.GetStartPoint();
                 var end = rec.GetEndPoint();
